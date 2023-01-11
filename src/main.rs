@@ -23,9 +23,13 @@ struct Args {
     #[arg(short, long, value_enum, default_value_t = Encoding::Utf8)]
     encoding: Encoding,
 
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
+    /// Color header line with timestamp src and target
+    #[arg(long, default_value_t = true)]
+    color_header: bool,
+
+    /// Color body with data
+    #[arg(long, default_value_t = false)]
+    color_data: bool,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -45,6 +49,17 @@ async fn main() -> std::io::Result<()> {
 
     let listener = TcpListener::bind(&args.listener_addr).await?;
 
+    let common_color_header = if args.color_header {
+        None
+    } else {
+        Some(Color::White)
+    };
+    let common_color_data = if args.color_data {
+        None
+    } else {
+        Some(Color::White)
+    };
+
     loop {
         let (incoming_stream, incoming_address) = listener.accept().await?;
         let target_addr = args.target_addr.clone();
@@ -63,12 +78,16 @@ async fn main() -> std::io::Result<()> {
                 &mut target_write,
                 args.encoding,
                 format!("{} -> {}", &incoming_address, &target_addr),
+                common_color_header.unwrap_or_else(|| Color::Cyan),
+                common_color_data.unwrap_or_else(|| Color::BrightCyan),
             );
             let pipe_write_read = copy(
                 &mut target_read,
                 &mut incoming_write,
                 args.encoding,
                 format!("{} -> {}", &target_addr, &incoming_address),
+                common_color_header.unwrap_or_else(|| Color::Green),
+                common_color_data.unwrap_or_else(|| Color::BrightGreen),
             );
 
             let (res1, res2) = join(pipe_read_write, pipe_write_read).await;
@@ -85,6 +104,8 @@ async fn copy<R, W>(
     writer: &mut W,
     encoding: Encoding,
     prefix: String,
+    color_header: Color,
+    color_data: Color,
 ) -> io::Result<u64>
 where
     R: AsyncRead + Unpin,
@@ -96,6 +117,8 @@ where
         amt: u64,
         encoding: Encoding,
         prefix: String,
+        color_header: Color,
+        color_data: Color,
     }
 
     impl<R, W> Future for CopyFuture<R, W>
@@ -121,7 +144,12 @@ where
                 };
 
                 let now = chrono::Utc::now().to_string();
-                println!("{}  {}\n{}", now.red(), &this.prefix.red(), buf_str);
+                println!(
+                    "{}  {}\n{}",
+                    now.color(this.color_header),
+                    &this.prefix.color(this.color_header),
+                    buf_str.color(this.color_data)
+                );
 
                 let i = ready!(Pin::new(&mut this.writer).poll_write(cx, buffer))?;
                 if i == 0 {
@@ -139,6 +167,8 @@ where
         amt: 0,
         encoding,
         prefix: prefix.to_owned(),
+        color_header,
+        color_data,
     };
 
     future.await
