@@ -1,4 +1,4 @@
-FROM rust:latest as cargo-build
+FROM rust:alpine as cargo-build
 
 WORKDIR /usr/src/
 
@@ -10,11 +10,10 @@ RUN cargo build --release
 # Package Stage
 # ------------------------------------------------------------------------------
 
-FROM ubuntu:focal
+FROM alpine
 
 # create user to limit access in container
 RUN groupadd -g 1001 tcp_snoop && useradd -r -u 1001 -g tcp_snoop tcp_snoop
-RUN apt update && apt install -y libssl1.1="1.1.1f-1ubuntu2"
 
 WORKDIR /home/tcp_snoop/bin/
 
