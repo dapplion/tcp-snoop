@@ -1,3 +1,4 @@
+name: release
 on:
   push:
     tags:
@@ -15,3 +16,5 @@ jobs:
       - run: |
           docker push ghcr.io/dapplion/tcp-snooper:${{github.ref_name}}
           docker push ghcr.io/dapplion/tcp-snooper:latest
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
