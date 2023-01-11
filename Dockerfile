@@ -14,6 +14,8 @@ RUN cargo build --release
 
 FROM ubuntu:focal
 
+LABEL org.opencontainers.image.source=https://github.com/dapplion/tcp-snooper
+
 # create user to limit access in container
 RUN groupadd -g 1001 tcp-snooper && useradd -r -u 1001 -g tcp-snooper tcp-snooper
 
