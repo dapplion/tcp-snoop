@@ -1,0 +1,16 @@
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      run: >
+        docker build .
+        --tag ghcr.io/dapplion/tcp-snooper:${{github.ref_name}}
+        --tag ghcr.io/dapplion/tcp-snooper:latest
+      run: |
+        docker push ghcr.io/dapplion/tcp-snooper:${{github.ref_name}}
+        docker push ghcr.io/dapplion/tcp-snooper:latest

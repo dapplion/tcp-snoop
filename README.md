@@ -2,7 +2,22 @@
 
 Log to stdout all data streamed through TCP connections
 
-Example usage:
+## Install
+
+Install and run with cargo
+
+```
+cargo install tcp-snooper
+tcp-snooper --help
+```
+
+Pull and run with docker
+
+```
+docker run ghcr.io/dapplion/tcp-snooper --help
+```
+
+## Usage
 
 _terminal 1_: Target
 
