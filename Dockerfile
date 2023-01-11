@@ -1,26 +1,28 @@
-FROM rust:alpine as cargo-build
+FROM rust:latest as cargo-build
 
 WORKDIR /usr/src/
 
 COPY . .
 
+# RUN rustup target add x86_64-unknown-linux-musl
+# RUN cargo build --release --target x86_64-unknown-linux-musl
 RUN cargo build --release
 
 # ------------------------------------------------------------------------------
 # Package Stage
 # ------------------------------------------------------------------------------
 
-FROM alpine
+FROM ubuntu:focal
 
 # create user to limit access in container
-RUN groupadd -g 1001 tcp_snoop && useradd -r -u 1001 -g tcp_snoop tcp_snoop
+RUN groupadd -g 1001 tcp-snooper && useradd -r -u 1001 -g tcp-snooper tcp-snooper
 
-WORKDIR /home/tcp_snoop/bin/
+WORKDIR /home/tcp-snooper/bin/
 
-COPY --from=cargo-build /usr/src/target/release/tcp_snoop .
+COPY --from=cargo-build /usr/src/target/release/tcp-snooper .
 
-RUN chown -R tcp_snoop:tcp_snoop /home/tcp_snoop/
+RUN chown -R tcp-snooper:tcp-snooper /home/tcp-snooper/
 
-USER tcp_snoop
+USER tcp-snooper
 
 ENTRYPOINT [""]
